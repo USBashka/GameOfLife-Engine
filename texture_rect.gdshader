@@ -1,8 +1,9 @@
 shader_type canvas_item;
 
-// Map (black and red) to (grey and yellow).
+uniform vec4 color = vec4(1, 1, 1, 1);
+uniform vec4 background = vec4(0, 0, 0, 0);
 
 void fragment() {
-	COLOR.rgb = COLOR.r * vec3(1.0, 0.95, 0.18);
-	COLOR.rgb += (1.0 - COLOR.r) * vec3(0.3, 0.3, 0.3);
+	COLOR = COLOR.r * color;
+	COLOR += (1.0 - COLOR.r) * background;
 }
