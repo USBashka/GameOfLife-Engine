@@ -6,7 +6,7 @@ extends Node
 # indices can be found quickly without worrying about going out of bounds.
 # Each component must be divisible by the corresponding component of group_size.
 @export var grid_size := Vector2i(1024, 1024)
-
+@export var speed = 1
 # Must match the local sizes defined in the shader.
 @export var group_size := Vector2i(4, 4)
 
@@ -23,13 +23,22 @@ var read_data: PackedByteArray
 var write_data: PackedByteArray
 
 var running := false
+var frames_to_execute = 0.0
+
 
 func _ready() -> void:
 	_prepare()
 
 func _process(_delta: float) -> void:
+	
 	if running:
-		execute()
+		frames_to_execute += speed
+		if frames_to_execute >= 1:
+			for i in range(floor(frames_to_execute)):
+				execute()
+				# Send data to TextureRect for displaying.
+				_update_display(read_data)
+			frames_to_execute -= floor(frames_to_execute)
 
 func _prepare() -> void:
 	# Load in shader.
@@ -93,8 +102,6 @@ func execute() -> void:
 	
 	# Get data from the buffer and put it into the input array for the next iteration.
 	read_data = rd.buffer_get_data(write_buffer)
-	# Send data to TextureRect for displaying.
-	_update_display(read_data)
 
 
 func randomise_data():
@@ -106,6 +113,14 @@ func randomise_data():
 	read_data = new_data.to_byte_array()
 	_update_display(read_data)
 
+func load_data(image: Image):
+	var new_data = PackedFloat32Array()
+	new_data.resize((grid_size.x + 2) * (grid_size.y + 2))
+	for i in grid_size.x:
+		for j in grid_size.y:
+			new_data[i + 2*j + 1 + (j + 1)*grid_size.x] = image.get_pixel(i, j).r
+	read_data = new_data.to_byte_array()
+	_update_display(read_data)
 
 func _update_display(with_data: PackedByteArray):
 	get_node("../TextureManager").set_data(with_data)
